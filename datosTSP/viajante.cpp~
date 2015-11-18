@@ -1,0 +1,277 @@
+#include <fstream>
+#include <iostream>
+using namespace std;
+#include <ctime>
+#include <cstdlib>
+#include <climits>
+#include <stdlib.h>
+#include <cmath>
+
+struct coordenada{
+	double x;
+	double y;
+};
+char a;
+int n=0;
+int ciudades_usadas=0;
+int origen_metodo3=0;
+double minimo_total=100000000;
+int b;
+double peso=0;
+bool recorrido_hecho=false;
+int cnt=0;
+double peso3=0;
+int cnt3=0;
+int distancia=0;
+void Crear_matriz(int **&matriz, int n){
+matriz = new int * [n];
+	for (int i=0; i<n; i++) {
+		matriz[i] = new int [n];
+	}
+}
+
+void Insertar_distancias(int **&matriz, int n, coordenada V[]){
+for(int i=0;i<n;i++){
+	for(int j=0;j<n;j++){
+		distancia=sqrt(pow((V[j].x-V[i].x),2)+(pow((V[j].y-V[i].y),2)));
+		matriz[i][j]=distancia;
+	}
+}
+}
+int Metodo_1(int **&matriz, int n,int origen, int *&v,int ori,int *&recorrido){
+int minimo=1000000000;
+int ciudad=0;
+if(cnt<n-1){
+	recorrido[cnt]=origen;
+	for(int j=0;j<n;j++){
+		if(minimo>matriz[origen][j] && v[j]!=-1){
+			minimo=matriz[origen][j];
+			ciudad=j;
+		}
+	}
+	cnt++;
+	v[ciudad]=-1;
+	peso=minimo+peso;
+	cout<<"De ciudad : "<<origen<<" A la ciudad "<<ciudad<<" Con peso : "<<minimo<<endl;
+	Metodo_1(matriz,n,ciudad,v,ori,recorrido);
+}
+else{
+	peso=peso+matriz[ori][origen];
+	cout<<"De ciudad : "<<origen<<" A la ciudad "<<ori<<" Con peso : "<<matriz[ori][origen]<<endl;
+	return peso;
+}
+}
+
+
+void Circuito_Previo(int n, int *&v, coordenada coordenadas[]){
+	int x=coordenadas[0].x;
+	int y=coordenadas[0].y;
+	int ciudad=0;
+	for(int i=0;i<n;i++){
+		if(x>coordenadas[i].x && y>coordenadas[i].y){
+			x=coordenadas[i].x;
+			y=coordenadas[i].y;
+			ciudad=i;
+		}
+	}
+	v[0]=ciudad;
+	for(int i=0;i<n;i++){
+		if(x<coordenadas[i].x && y<coordenadas[i].y){
+			x=coordenadas[i].x;
+			y=coordenadas[i].y;
+			ciudad=i;
+		}
+	}
+	v[1]=ciudad;
+	for(int i=0;i<n;i++){
+		if(x<coordenadas[i].x && y>coordenadas[i].y){
+			x=coordenadas[i].x;
+			y=coordenadas[i].y;
+			ciudad=i;
+		}
+	}
+	v[2]=ciudad;
+	recorrido_hecho=true;
+}
+
+double Metodo_2(int **&matriz, int n, coordenada coordenada[],int *&v,int *&recorrido){
+	int ciudad_previa;
+	double peso=0;
+	int recorrido_minimo[n];
+	int recorrido_previo[n];
+	bool encontrado=true;
+	double peso_minimo=100000000000;
+	if(ciudades_usadas<n){
+		if(recorrido_hecho==false){
+			Circuito_Previo(n, recorrido, coordenada);
+			ciudades_usadas=3;
+		}
+		for (int i=0;i<n;i++){
+			encontrado=true;
+			ciudad_previa=v[i];
+				for(int j=0;j<ciudades_usadas;j++){
+					if(ciudad_previa==recorrido[j])
+						encontrado=false;
+				}
+				if(encontrado==true){
+				int t=0;
+				for(int j=0;j<ciudades_usadas+1;j++){
+					int z=0;
+					for(int k=0;k<ciudades_usadas+1;k++){
+						if(k==t){
+							recorrido_previo[k]=ciudad_previa;
+						}
+						else{
+							recorrido_previo[k]=recorrido[z];
+							z++;
+						}
+					}
+					peso=0;
+					for(int p=0;p<ciudades_usadas-1;p++){
+						peso=matriz[recorrido_previo[p]][recorrido_previo[p+1]]+peso;
+					}
+						peso=matriz[recorrido[0]][recorrido[ciudades_usadas-1]]+peso;
+					if(peso<peso_minimo){
+						for(int p=0;p<ciudades_usadas+1;p++){
+							peso_minimo=peso;
+							recorrido_minimo[p]=recorrido_previo[p];
+						}
+					}
+					t++;
+					}
+				}
+			}
+					for(int p=0;p<ciudades_usadas+1;p++){
+						recorrido[p]=recorrido_minimo[p];
+					}
+		ciudades_usadas++;
+		Metodo_2(matriz,n,coordenada,v,recorrido);
+	}
+	else{
+		peso_minimo=0;
+		for(int p=0;p<n-1;p++)
+			peso_minimo=matriz[recorrido[p]][recorrido[p+1]]+peso_minimo;
+		peso_minimo=matriz[recorrido[0]][recorrido[n-1]]+peso_minimo;
+		return peso_minimo;
+	}
+
+}
+
+double Metodo_3(int **&matriz, int n,int *&v,int *&recorrido, int recorrido_parcial[]){
+if(cnt3<n){
+	double minimo=10000000;
+	bool encontrado=true;
+	int ciudad;
+	int ciudad_minimo;
+	int t=0;
+	recorrido_parcial[0]=origen_metodo3;
+	for(int i=1;i<n;i++){
+		for(int d=0;d<n;d++){
+			encontrado=true;
+			ciudad=v[d];
+			for(int j=0;j<=t;j++){
+				if(ciudad==recorrido_parcial[j])
+					encontrado=false;
+			}
+			if(encontrado==true){
+				if(matriz[recorrido_parcial[t]][ciudad]<minimo){
+					minimo=matriz[recorrido_parcial[t]][ciudad];
+					ciudad_minimo=ciudad;
+				}
+			}
+		
+		}
+		peso3=minimo+peso3;
+		t++;
+		minimo=10000000000;
+		recorrido_parcial[i]=ciudad_minimo;
+	}
+	peso3=matriz[recorrido_parcial[0]][recorrido_parcial[n-1]]+peso3;
+	if(peso3<minimo_total){
+		for(int i=0;i<n;i++){
+			recorrido[i]=recorrido_parcial[i];
+			minimo_total=peso3;
+		}
+	}
+	origen_metodo3++;
+	cnt3++;
+	peso3=0;
+	Metodo_3(matriz,n,v,recorrido,recorrido_parcial);
+	
+}
+else{
+	return minimo_total;
+}
+}
+
+
+int main(int argc ,char *argv[] ){
+fstream fichero(argv[1]);
+int **matriz;
+int *recorrido;
+double peso2;
+if(!fichero){
+	cout<<"No"<<endl;
+}
+else{
+	for(int i=0;i<10;i++){
+		fichero>>a;
+	}
+	fichero>>n;
+	coordenada ves[n];
+	double x1=0;
+	int ori;
+	double y1=0;
+	int *ciudades;
+	for(int i=0;i<n;i++){
+		fichero>>b;
+		fichero>>x1;
+		fichero>>y1;
+		ves[i].x=x1;
+		ves[i].y=y1;
+	}
+	for(int i=0;i<n;i++){
+		cout<<"x : "<<ves[i].x<<endl;
+		cout<<"y : "<<ves[i].y<<endl;
+	}
+	ciudades=new int [n]; 
+	for(int i=0;i<n;i++){
+		ciudades[i]=i;
+	}
+	cout<<"diga origen"<<endl;
+	cin>>ori;
+	ciudades[ori]=-1;
+	Crear_matriz(matriz,n);
+	Insertar_distancias(matriz,n,ves);
+	for(int i=0;i<n;i++){
+		for(int j=0;j<n;j++){
+			cout<<"DESDE "<<i<<"hasta "<<j<<" : "<<matriz[i][j]<<endl;
+		}
+	}
+	recorrido=new int [n];
+	int peso=0;
+	peso=Metodo_1(matriz,n,ori,ciudades,ori,recorrido);
+	for(int i=0;i<n;i++)
+		cout<<recorrido[i]<<" ";
+	cout<<endl;
+	cout<<"Peso : "<<peso<<endl;
+	for(int i=0;i<n;i++){
+		ciudades[i]=i;
+	}
+	peso2=Metodo_2(matriz,n,ves,ciudades,recorrido);
+	for(int i=0;i<n;i++)
+		cout<<recorrido[i]<<" ";
+	cout<<endl;
+	cout<<"Peso2 : "<<peso2<<endl;
+	int recorrido_parcial[n];
+	for(int i=0;i<n;i++)
+		recorrido_parcial[i]=-1;
+	double peso3_;
+	peso3_=Metodo_3(matriz,n,ciudades,recorrido,recorrido_parcial);
+	for(int i=0;i<n;i++)
+		cout<<recorrido[i]<<" ";
+	cout<<endl;
+	cout<<"Peso3 : "<<peso3_<<endl;
+fichero.close();
+}
+}
